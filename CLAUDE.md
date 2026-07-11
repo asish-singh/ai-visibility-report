@@ -9,13 +9,13 @@ A public lead magnet website where anyone can scan their website and get a plain
 
 ## Goal
 
-Bring in warm consulting leads for the AI SEO business. A prospect enters their website address, sees a teaser score, leaves an email, and gets the full plain English report. Leads land in a local file for follow up with the aiseo-clients engine.
+Bring in warm consulting leads for the AI SEO business. A prospect enters their website address, sees a teaser score, leaves an email, and gets the full plain English report. Leads land in the aiseo-clients prospects folder on GitHub for follow up with the engagement engine.
 
 ## How to run it
 
 - `npm install` once, then `npm start`
 - Open http://localhost:3000
-- Captured leads are saved to `data/leads.json` (git ignored)
+- Leads are committed to asish-singh/aiseo-clients under `prospects/<domain>/`; needs GITHUB_TOKEN in `.env` (in deploy archive only, never in git)
 
 ## Notes for Claude
 

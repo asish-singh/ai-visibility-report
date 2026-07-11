@@ -9,7 +9,7 @@ Built on the open source [agent-readiness-auditor](https://github.com/asish-sing
 1. A visitor enters their website address, the server runs the auditor against it.
 2. They see their grade and a count of passing and failing checks.
 3. To see the full report with fixes, they leave an email.
-4. Leads are saved locally to `data/leads.json` (never committed to git).
+4. Each lead is committed to the private aiseo-clients repo under `prospects/<domain>/` with the full audit, ready for the engagement engine.
 
 ## How to run
 
@@ -22,4 +22,4 @@ Then open http://localhost:3000 and scan any website.
 
 ## Where the leads go
 
-Every captured email is appended to `data/leads.json` with the website, score, grade and timestamp. Follow up using the aiseo-clients engagement engine.
+Every captured email is committed to the private aiseo-clients repo as `prospects/<domain>/lead.json` together with `audit.json`. The server needs a `GITHUB_TOKEN` environment variable (a fine grained token scoped to that repo) supplied via a `.env` file that ships in the deploy archive but never in git.
