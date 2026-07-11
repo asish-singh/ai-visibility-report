@@ -5,7 +5,7 @@ A public lead magnet website where anyone can scan their website and get a plain
 ## Status
 
 - Started: 2026-07-11
-- Current state: working local version (scan, report card, email capture)
+- Current state: live at https://scan.asishsingh.in
 
 ## Goal
 
