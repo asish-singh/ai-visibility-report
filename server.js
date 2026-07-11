@@ -7,7 +7,7 @@ import fs from "node:fs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = process.env.PORT || 3000;
-const AUDIT_BIN = path.join(__dirname, "node_modules", ".bin", "agent-audit");
+const AUDIT_SCRIPT = path.join(__dirname, "node_modules", "agent-readiness-auditor", "dist", "index.js");
 const DATA_DIR = path.join(__dirname, "data");
 const LEADS_FILE = path.join(DATA_DIR, "leads.json");
 
@@ -41,11 +41,11 @@ function normalizeUrl(input) {
 
 function runAudit(url) {
   return new Promise((resolve, reject) => {
-    execFile(AUDIT_BIN, [url, "--json"], { timeout: 90_000 }, (err, stdout) => {
+    execFile(process.execPath, [AUDIT_SCRIPT, url, "--json"], { timeout: 90_000 }, (err, stdout, stderr) => {
       if (stdout && stdout.trim().startsWith("{")) {
         try { return resolve(JSON.parse(stdout)); } catch {}
       }
-      reject(err || new Error("Audit produced no result"));
+      reject(err || new Error(stderr || "Audit produced no result"));
     });
   });
 }
