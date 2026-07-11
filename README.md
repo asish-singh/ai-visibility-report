@@ -4,6 +4,8 @@
 
 A free web tool that answers one question for any website owner, how visible is my site to AI assistants like ChatGPT, Claude, and Perplexity? Enter a web address, get a grade out of 100 in about 30 seconds, and unlock a full plain English report that explains every check and how to fix it.
 
+![The scanner showing a report card for example.com, grade C with plain English findings and fixes](docs/screenshot.png)
+
 It is the public face of my open source [agent-readiness-auditor](https://github.com/asish-singh/agent-readiness-auditor), which normally runs on the command line. This wraps the same nine check audit in a page anyone can use, no technical knowledge needed.
 
 ## Why it exists

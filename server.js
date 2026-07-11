@@ -19,9 +19,24 @@ if (fs.existsSync(envFile)) {
 
 const PORT = process.env.PORT || 3000;
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN || "";
-const PROSPECTS_REPO = process.env.PROSPECTS_REPO || "asish-singh/aiseo-clients";
+const PROSPECTS_REPO = process.env.PROSPECTS_REPO || "";
+
+// Simple per visitor rate limit, RATE_LIMIT scans per hour (default 10).
+const RATE_LIMIT = Number(process.env.RATE_LIMIT || 10);
+const RATE_WINDOW_MS = 60 * 60 * 1000;
+const scanCounts = new Map(); // ip -> [timestamps]
+function rateLimited(ip) {
+  const now = Date.now();
+  const hits = (scanCounts.get(ip) || []).filter(t => now - t < RATE_WINDOW_MS);
+  if (hits.length >= RATE_LIMIT) { scanCounts.set(ip, hits); return true; }
+  hits.push(now);
+  scanCounts.set(ip, hits);
+  if (scanCounts.size > 10_000) scanCounts.clear();
+  return false;
+}
 
 const app = express();
+app.set("trust proxy", 1);
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
 
@@ -55,6 +70,9 @@ async function runAudit(url) {
 }
 
 app.post("/api/scan", async (req, res) => {
+  if (rateLimited(req.ip)) {
+    return res.status(429).json({ error: "You have hit the hourly scan limit. Please try again later." });
+  }
   const url = normalizeUrl(req.body.url);
   if (!url) return res.status(400).json({ error: "Please enter a valid website address, like example.com" });
   try {
@@ -122,7 +140,7 @@ async function githubPut(filePath, content, message) {
 }
 
 async function saveLeadToGitHub(lead, report) {
-  if (!GITHUB_TOKEN) throw new Error("GITHUB_TOKEN is not set");
+  if (!GITHUB_TOKEN || !PROSPECTS_REPO) throw new Error("GITHUB_TOKEN or PROSPECTS_REPO is not set");
   const host = new URL(lead.website).hostname;
   const msg = `New lead from scan.asishsingh.in for ${host}`;
   await githubPut(`prospects/${host}/lead.json`, JSON.stringify(lead, null, 2) + "\n", msg);

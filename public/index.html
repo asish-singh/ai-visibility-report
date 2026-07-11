@@ -193,6 +193,30 @@ function renderReport(report) {
   $("reportArea").scrollIntoView({ behavior: "smooth" });
 }
 
+// Demo mode for screenshots, ?demo=1 renders a sample report without scanning.
+if (new URLSearchParams(location.search).has("demo")) {
+  Element.prototype.scrollIntoView = () => {};
+  $("gradeBadge").textContent = "C";
+  $("gradeBadge").style.background = gradeColor("C");
+  $("teaserTitle").textContent = "example.com scored 64 out of 100";
+  $("cPass").textContent = 5; $("cWarn").textContent = 3; $("cFail").textContent = 1;
+  $("teaserCard").classList.remove("hidden");
+  renderReport({
+    origin: "https://example.com", score: 64, maxScore: 100, grade: "C",
+    findings: [
+      { title: "llms.txt is missing", severity: "fail", detail: "There is no llms.txt file, so AI assistants get no guide to your most important pages.", remediation: "Publish a short llms.txt at your site root listing your key pages with one line descriptions." },
+      { title: "No structured data", severity: "warn", detail: "No schema.org markup was found, so AI systems scrape prose instead of reading facts about your business.", remediation: "Add JSON LD structured data for your organization, products, and FAQs." },
+      { title: "robots.txt is silent on AI crawlers", severity: "warn", detail: "Your robots.txt takes no explicit stance on AI crawlers like GPTBot or ClaudeBot.", remediation: "Add explicit allow or disallow rules for the major AI crawlers so your policy is deliberate." },
+      { title: "No answer ready content", severity: "warn", detail: "No FAQ or question styled pages were found, which is the content AI assistants cite most.", remediation: "Add an FAQ page that answers the questions buyers actually ask, with FAQ schema markup." },
+      { title: "No hidden prompt injection payloads", severity: "pass", detail: "No injection style phrases found in hidden content." },
+      { title: "Sitemap present", severity: "pass", detail: "sitemap.xml exists and is referenced from robots.txt." },
+      { title: "Site is indexable", severity: "pass", detail: "No accidental noindex or blanket crawl blocks were found." },
+      { title: "Accountability links present", severity: "pass", detail: "Contact and about pages are reachable from the homepage." },
+      { title: "Readable without JavaScript", severity: "pass", detail: "The main content is served as HTML, so agents see what people see." }
+    ]
+  });
+}
+
 function esc(s) {
   return String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
