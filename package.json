@@ -1,0 +1,13 @@
+{
+  "name": "ai-visibility-report",
+  "version": "0.1.0",
+  "description": "Free AI visibility report card for any website, a lead magnet built on agent-readiness-auditor.",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "agent-readiness-auditor": "^0.4.6",
+    "express": "^4.19.2"
+  }
+}

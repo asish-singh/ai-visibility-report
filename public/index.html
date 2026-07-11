@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Free AI Visibility Report. Can AI assistants find your website?</title>
+<meta name="description" content="Scan your website in 30 seconds and see how visible it is to ChatGPT, Claude, Perplexity and other AI assistants. Free report card with plain English fixes.">
+<style>
+  :root {
+    --ink: #16202b; --muted: #5b6b7b; --bg: #f6f8fa; --card: #ffffff;
+    --accent: #1156d6; --accent-ink: #ffffff; --line: #e3e9ef;
+    --pass: #157f3d; --warn: #a86500; --fail: #c22f2f;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body { font: 16px/1.6 -apple-system, "Segoe UI", Roboto, sans-serif; color: var(--ink); background: var(--bg); }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 24px 20px 80px; }
+  header { text-align: center; padding: 56px 0 8px; }
+  h1 { font-size: 2rem; line-height: 1.25; letter-spacing: -0.01em; }
+  .sub { color: var(--muted); margin: 14px auto 0; max-width: 540px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 28px; margin-top: 28px; box-shadow: 0 1px 3px rgba(16,32,48,.05); }
+  form.scan { display: flex; gap: 10px; flex-wrap: wrap; }
+  input[type=text], input[type=email] { flex: 1 1 240px; padding: 13px 15px; font-size: 1rem; border: 1px solid var(--line); border-radius: 9px; }
+  input:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
+  button { padding: 13px 22px; font-size: 1rem; font-weight: 600; color: var(--accent-ink); background: var(--accent); border: 0; border-radius: 9px; cursor: pointer; }
+  button:disabled { opacity: .6; cursor: wait; }
+  .hint { color: var(--muted); font-size: .85rem; margin-top: 10px; }
+  .error { color: var(--fail); margin-top: 12px; font-weight: 500; }
+  .hidden { display: none; }
+  .scoreRow { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; }
+  .gradeBadge { width: 86px; height: 86px; border-radius: 50%; display: grid; place-items: center; font-size: 2.2rem; font-weight: 700; color: #fff; flex-shrink: 0; }
+  .counts { display: flex; gap: 16px; margin-top: 10px; font-size: .95rem; flex-wrap: wrap; }
+  .counts b.pass { color: var(--pass); } .counts b.warn { color: var(--warn); } .counts b.fail { color: var(--fail); }
+  .finding { border-top: 1px solid var(--line); padding: 16px 0; }
+  .finding h4 { font-size: 1rem; display: flex; gap: 10px; align-items: baseline; }
+  .tag { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; padding: 2px 8px; border-radius: 20px; color: #fff; flex-shrink: 0; }
+  .tag.pass { background: var(--pass); } .tag.warn { background: var(--warn); } .tag.fail { background: var(--fail); }
+  .finding p { color: var(--muted); font-size: .93rem; margin-top: 6px; }
+  .finding .fix { color: var(--ink); background: #f0f5ff; border-radius: 8px; padding: 10px 12px; margin-top: 8px; }
+  .cta { background: #0f2a5e; color: #fff; text-align: center; }
+  .cta h3 { font-size: 1.25rem; }
+  .cta p { color: #c9d6ee; margin: 10px 0 18px; }
+  .cta a { display: inline-block; background: #fff; color: #0f2a5e; font-weight: 700; padding: 12px 24px; border-radius: 9px; text-decoration: none; }
+  footer { text-align: center; color: var(--muted); font-size: .85rem; margin-top: 48px; }
+  footer a { color: var(--muted); }
+  .spinner { display: inline-block; width: 18px; height: 18px; border: 3px solid rgba(255,255,255,.4); border-top-color: #fff; border-radius: 50%; animation: spin .8s linear infinite; vertical-align: -4px; margin-right: 8px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Is your website invisible to AI assistants?</h1>
+    <p class="sub">More and more customers ask ChatGPT, Claude and Perplexity instead of Google. Scan your site in about 30 seconds and get a free report card with plain English fixes.</p>
+  </header>
+
+  <div class="card" id="scanCard">
+    <form class="scan" id="scanForm">
+      <input type="text" id="urlInput" placeholder="yourwebsite.com" autocomplete="url" required>
+      <button type="submit" id="scanBtn">Scan my site free</button>
+    </form>
+    <p class="hint">No signup needed to see your score. We only check public pages, nothing is changed on your site.</p>
+    <p class="error hidden" id="scanError"></p>
+  </div>
+
+  <div class="card hidden" id="teaserCard">
+    <div class="scoreRow">
+      <div class="gradeBadge" id="gradeBadge">?</div>
+      <div>
+        <h3 id="teaserTitle"></h3>
+        <div class="counts">
+          <span><b class="pass" id="cPass">0</b> passed</span>
+          <span><b class="warn" id="cWarn">0</b> need attention</span>
+          <span><b class="fail" id="cFail">0</b> failing</span>
+        </div>
+      </div>
+    </div>
+    <hr style="border:0;border-top:1px solid var(--line);margin:22px 0">
+    <h3>Get your full report free</h3>
+    <p class="hint" style="margin-top:6px">See exactly which checks failed and how to fix each one. We send it to your inbox and show it here right away.</p>
+    <form class="scan" id="leadForm" style="margin-top:14px">
+      <input type="text" id="nameInput" placeholder="Your name (optional)" style="flex:0 1 200px">
+      <input type="email" id="emailInput" placeholder="you@company.com" required>
+      <button type="submit" id="leadBtn">Show my full report</button>
+    </form>
+    <p class="error hidden" id="leadError"></p>
+  </div>
+
+  <div class="hidden" id="reportArea">
+    <div class="card">
+      <h3 style="margin-bottom:4px">Your full AI visibility report</h3>
+      <p class="hint" id="reportUrl"></p>
+      <div id="findings"></div>
+    </div>
+    <div class="card cta">
+      <h3>Want these fixed for you?</h3>
+      <p>I help businesses become the answer AI assistants recommend. Reply to the report email or reach out directly and I will walk you through a fix plan.</p>
+      <a href="mailto:asish-singh@x-b-e.com?subject=AI%20visibility%20fix%20plan">Email me for a fix plan</a>
+    </div>
+  </div>
+
+  <footer>
+    Built on the open source <a href="https://github.com/asish-singh/agent-readiness-auditor">agent-readiness-auditor</a>. Your email is only used to send your report and occasional practical tips.
+  </footer>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+let scanId = null;
+
+const PLAIN = {
+  pass: "Working well",
+  warn: "Needs attention",
+  fail: "Failing"
+};
+
+function gradeColor(grade) {
+  const g = (grade || "").charAt(0).toUpperCase();
+  if (g === "A") return "#157f3d";
+  if (g === "B") return "#4c9a2a";
+  if (g === "C") return "#a86500";
+  if (g === "D") return "#c25e00";
+  return "#c22f2f";
+}
+
+$("scanForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const btn = $("scanBtn");
+  $("scanError").classList.add("hidden");
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Scanning…';
+  try {
+    const r = await fetch("/api/scan", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url: $("urlInput").value })
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || "Something went wrong. Please try again.");
+    scanId = d.scanId;
+    $("gradeBadge").textContent = d.grade;
+    $("gradeBadge").style.background = gradeColor(d.grade);
+    $("teaserTitle").textContent = d.url.replace(/^https?:\/\//, "") + " scored " + d.score + " out of " + d.maxScore;
+    $("cPass").textContent = d.counts.pass || 0;
+    $("cWarn").textContent = d.counts.warn || 0;
+    $("cFail").textContent = d.counts.fail || 0;
+    $("teaserCard").classList.remove("hidden");
+    $("reportArea").classList.add("hidden");
+    $("teaserCard").scrollIntoView({ behavior: "smooth" });
+  } catch (err) {
+    $("scanError").textContent = err.message;
+    $("scanError").classList.remove("hidden");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Scan my site free";
+  }
+});
+
+$("leadForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const btn = $("leadBtn");
+  $("leadError").classList.add("hidden");
+  btn.disabled = true;
+  btn.textContent = "One moment…";
+  try {
+    const r = await fetch("/api/report", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ scanId, email: $("emailInput").value, name: $("nameInput").value })
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || "Something went wrong. Please try again.");
+    renderReport(d.report);
+  } catch (err) {
+    $("leadError").textContent = err.message;
+    $("leadError").classList.remove("hidden");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Show my full report";
+  }
+});
+
+function renderReport(report) {
+  $("reportUrl").textContent = report.origin + " · " + report.score + " / " + report.maxScore + " (grade " + report.grade + ")";
+  const order = { fail: 0, warn: 1, pass: 2 };
+  const list = [...report.findings].sort((a, b) => order[a.severity] - order[b.severity]);
+  $("findings").innerHTML = list.map(f => `
+    <div class="finding">
+      <h4><span class="tag ${f.severity}">${PLAIN[f.severity]}</span> ${esc(f.title)}</h4>
+      <p>${esc(f.detail)}</p>
+      ${f.remediation && f.severity !== "pass" ? `<p class="fix"><strong>How to fix it.</strong> ${esc(f.remediation)}</p>` : ""}
+    </div>`).join("");
+  $("reportArea").classList.remove("hidden");
+  $("reportArea").scrollIntoView({ behavior: "smooth" });
+}
+
+function esc(s) {
+  return String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+</script>
+</body>
+</html>
