@@ -1,5 +1,6 @@
 import express from "express";
-import { execFile } from "node:child_process";
+import { fetchSite } from "agent-readiness-auditor/dist/fetch-site.js";
+import { audit } from "agent-readiness-auditor/dist/audit.js";
 import { randomUUID } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
@@ -7,7 +8,6 @@ import fs from "node:fs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = process.env.PORT || 3000;
-const AUDIT_SCRIPT = path.join(__dirname, "node_modules", "agent-readiness-auditor", "dist", "index.js");
 const DATA_DIR = path.join(__dirname, "data");
 const LEADS_FILE = path.join(DATA_DIR, "leads.json");
 
@@ -39,15 +39,9 @@ function normalizeUrl(input) {
   }
 }
 
-function runAudit(url) {
-  return new Promise((resolve, reject) => {
-    execFile(process.execPath, [AUDIT_SCRIPT, url, "--json"], { timeout: 90_000 }, (err, stdout, stderr) => {
-      if (stdout && stdout.trim().startsWith("{")) {
-        try { return resolve(JSON.parse(stdout)); } catch {}
-      }
-      reject(err || new Error(stderr || "Audit produced no result"));
-    });
-  });
+async function runAudit(url) {
+  const ctx = await fetchSite(url);
+  return audit(ctx);
 }
 
 app.post("/api/scan", async (req, res) => {
