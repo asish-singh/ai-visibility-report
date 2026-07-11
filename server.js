@@ -7,9 +7,19 @@ import path from "node:path";
 import fs from "node:fs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+// Load .env (kept out of git, shipped only inside the deploy archive).
+const envFile = path.join(__dirname, ".env");
+if (fs.existsSync(envFile)) {
+  for (const line of fs.readFileSync(envFile, "utf8").split("\n")) {
+    const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/);
+    if (m && !(m[1] in process.env)) process.env[m[1]] = m[2];
+  }
+}
+
 const PORT = process.env.PORT || 3000;
-const DATA_DIR = path.join(__dirname, "data");
-const LEADS_FILE = path.join(DATA_DIR, "leads.json");
+const GITHUB_TOKEN = process.env.GITHUB_TOKEN || "";
+const PROSPECTS_REPO = process.env.PROSPECTS_REPO || "asish-singh/aiseo-clients";
 
 const app = express();
 app.use(express.json());
@@ -76,21 +86,49 @@ app.post("/api/report", (req, res) => {
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email || ""))) {
     return res.status(400).json({ error: "Please enter a valid email address." });
   }
-  // Save the lead.
-  fs.mkdirSync(DATA_DIR, { recursive: true });
-  let leads = [];
-  try { leads = JSON.parse(fs.readFileSync(LEADS_FILE, "utf8")); } catch {}
-  leads.push({
+  const lead = {
     email: String(email).trim().toLowerCase(),
     name: String(name || "").trim(),
     website: entry.url,
     score: entry.report.score,
     grade: entry.report.grade,
     capturedAt: new Date().toISOString(),
-  });
-  fs.writeFileSync(LEADS_FILE, JSON.stringify(leads, null, 2));
+    source: "scan.asishsingh.in",
+  };
+  // Show the report immediately; save the lead to GitHub in the background.
   res.json({ report: entry.report });
+  saveLeadToGitHub(lead, entry.report).catch(e => {
+    console.error("LEAD SAVE FAILED, capture it manually:", JSON.stringify(lead), e.message);
+  });
 });
+
+async function githubPut(filePath, content, message) {
+  const url = `https://api.github.com/repos/${PROSPECTS_REPO}/contents/${filePath}`;
+  const headers = {
+    Authorization: `Bearer ${GITHUB_TOKEN}`,
+    Accept: "application/vnd.github+json",
+    "User-Agent": "ai-visibility-report",
+  };
+  // Include the current file sha if it already exists (required to update).
+  let sha;
+  const existing = await fetch(url, { headers });
+  if (existing.ok) sha = (await existing.json()).sha;
+  const r = await fetch(url, {
+    method: "PUT",
+    headers,
+    body: JSON.stringify({ message, content: Buffer.from(content).toString("base64"), sha }),
+  });
+  if (!r.ok) throw new Error(`GitHub ${r.status}: ${(await r.text()).slice(0, 200)}`);
+}
+
+async function saveLeadToGitHub(lead, report) {
+  if (!GITHUB_TOKEN) throw new Error("GITHUB_TOKEN is not set");
+  const host = new URL(lead.website).hostname;
+  const msg = `New lead from scan.asishsingh.in for ${host}`;
+  await githubPut(`prospects/${host}/lead.json`, JSON.stringify(lead, null, 2) + "\n", msg);
+  await githubPut(`prospects/${host}/audit.json`, JSON.stringify(report, null, 2) + "\n", msg);
+  console.log("lead saved to GitHub:", host, lead.email);
+}
 
 app.listen(PORT, () => {
   console.log(`AI Visibility Report running at http://localhost:${PORT}`);
