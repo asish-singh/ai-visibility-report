@@ -1,0 +1,18 @@
+# AI Visibility Report
+
+> Free scanner that checks any website for AI agent readiness. Enter a web address and get a plain English report card covering llms.txt, robots directives, structured data, and prompt injection safety. Built on the open source agent-readiness-auditor.
+
+This site is run by Asish Singh, an AI SEO consultant. The scanner wraps the agent-readiness-auditor npm package, which is also listed in the official MCP registry as io.github.asish-singh/agent-readiness-auditor.
+
+## Using the scanner
+
+- [Run a scan](https://scan.asishsingh.in): enter a website address on the home page to get a free AI visibility report card.
+
+## The tool behind it
+
+- [agent-readiness-auditor on GitHub](https://github.com/asish-singh/agent-readiness-auditor): open source CLI and MCP server that performs the underlying audit.
+- [agent-readiness-auditor on npm](https://www.npmjs.com/package/agent-readiness-auditor): run the same audit yourself with npx agent-readiness-auditor.
+
+## About
+
+- [Asish Singh](https://asishsingh.in): consulting and writing on AI search visibility and the agentic web.
